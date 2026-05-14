@@ -1,0 +1,673 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Babyfoon</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#5c7a5c">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Babyfoon">
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500&display=swap');
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --cream: #faf7f2;
+    --warm: #f0e8d8;
+    --sage: #8aaa8a;
+    --sage-dark: #5c7a5c;
+    --blush: #e8c4b0;
+    --text: #2a2420;
+    --muted: #8a7a72;
+    --card: #ffffff;
+    --shadow: 0 8px 40px rgba(0,0,0,0.08);
+  }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--cream);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    color: var(--text);
+  }
+
+  /* Soft background pattern */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background:
+      radial-gradient(ellipse at 20% 20%, rgba(138,170,138,0.12) 0%, transparent 50%),
+      radial-gradient(ellipse at 80% 80%, rgba(232,196,176,0.15) 0%, transparent 50%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .container {
+    position: relative;
+    z-index: 1;
+    width: 100%;
+    max-width: 420px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+
+  .header {
+    text-align: center;
+    padding: 8px 0 4px;
+  }
+
+  .header h1 {
+    font-family: 'DM Serif Display', serif;
+    font-size: 2.4rem;
+    color: var(--text);
+    letter-spacing: -0.5px;
+    line-height: 1;
+  }
+
+  .header h1 em {
+    font-style: italic;
+    color: var(--sage-dark);
+  }
+
+  .header p {
+    margin-top: 6px;
+    font-size: 0.85rem;
+    color: var(--muted);
+    font-weight: 300;
+  }
+
+  /* Mode selector */
+  .mode-card {
+    background: var(--card);
+    border-radius: 20px;
+    padding: 20px;
+    box-shadow: var(--shadow);
+  }
+
+  .mode-label {
+    font-size: 0.75rem;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    color: var(--muted);
+    margin-bottom: 12px;
+  }
+
+  .mode-buttons {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+
+  .mode-btn {
+    border: 2px solid var(--warm);
+    background: var(--warm);
+    border-radius: 14px;
+    padding: 16px 12px;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .mode-btn:hover { border-color: var(--sage); }
+
+  .mode-btn.active {
+    border-color: var(--sage-dark);
+    background: var(--sage-dark);
+    color: white;
+  }
+
+  .mode-btn .icon {
+    font-size: 1.8rem;
+    line-height: 1;
+  }
+
+  .mode-btn .label {
+    font-size: 0.8rem;
+    font-weight: 500;
+  }
+
+  .mode-btn .sublabel {
+    font-size: 0.7rem;
+    opacity: 0.65;
+  }
+
+  .mode-btn.active .sublabel { opacity: 0.8; }
+
+  /* Code section */
+  .code-card {
+    background: var(--card);
+    border-radius: 20px;
+    padding: 20px;
+    box-shadow: var(--shadow);
+  }
+
+  .code-row {
+    display: flex;
+    gap: 10px;
+    align-items: flex-end;
+  }
+
+  .code-input-wrap {
+    flex: 1;
+  }
+
+  .code-input-wrap label {
+    display: block;
+    font-size: 0.75rem;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    color: var(--muted);
+    margin-bottom: 8px;
+  }
+
+  .code-input {
+    width: 100%;
+    border: 2px solid var(--warm);
+    border-radius: 12px;
+    padding: 12px 14px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 1.1rem;
+    font-weight: 500;
+    letter-spacing: 3px;
+    color: var(--text);
+    background: var(--cream);
+    outline: none;
+    text-transform: uppercase;
+    transition: border-color 0.2s;
+  }
+
+  .code-input:focus { border-color: var(--sage); }
+
+  .gen-btn {
+    padding: 12px 14px;
+    border: none;
+    border-radius: 12px;
+    background: var(--warm);
+    color: var(--text);
+    font-size: 0.75rem;
+    font-weight: 500;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: background 0.2s;
+  }
+
+  .gen-btn:hover { background: var(--blush); }
+
+  /* Action button */
+  .action-btn {
+    width: 100%;
+    padding: 18px;
+    border: none;
+    border-radius: 16px;
+    background: var(--sage-dark);
+    color: white;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 1rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+    letter-spacing: 0.3px;
+  }
+
+  .action-btn:hover { background: var(--sage); transform: translateY(-1px); }
+  .action-btn:active { transform: translateY(0); }
+  .action-btn:disabled { background: #ccc; cursor: default; transform: none; }
+
+  .action-btn.danger {
+    background: #c0392b;
+  }
+  .action-btn.danger:hover { background: #e74c3c; }
+
+  /* Status card */
+  .status-card {
+    background: var(--card);
+    border-radius: 20px;
+    padding: 24px 20px;
+    box-shadow: var(--shadow);
+    text-align: center;
+    display: none;
+  }
+
+  .status-card.visible { display: block; }
+
+  .status-icon {
+    font-size: 2.5rem;
+    margin-bottom: 10px;
+  }
+
+  .status-title {
+    font-family: 'DM Serif Display', serif;
+    font-size: 1.3rem;
+    color: var(--text);
+    margin-bottom: 4px;
+  }
+
+  .status-sub {
+    font-size: 0.82rem;
+    color: var(--muted);
+    font-weight: 300;
+  }
+
+  /* Volume visualizer */
+  .visualizer {
+    display: none;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    height: 48px;
+    margin: 16px 0 0;
+  }
+
+  .visualizer.visible { display: flex; }
+
+  .bar {
+    width: 5px;
+    border-radius: 3px;
+    background: var(--sage);
+    height: 6px;
+    transition: height 0.1s ease;
+    min-height: 4px;
+    max-height: 44px;
+  }
+
+  /* Connection steps */
+  .steps {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-top: 14px;
+  }
+
+  .step {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 0.82rem;
+    color: var(--muted);
+    font-weight: 300;
+  }
+
+  .step-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--warm);
+    flex-shrink: 0;
+    border: 2px solid var(--blush);
+    transition: all 0.4s;
+  }
+
+  .step-dot.done { background: var(--sage); border-color: var(--sage); }
+  .step-dot.active {
+    background: var(--blush);
+    border-color: var(--sage-dark);
+    animation: pulse 1s infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { transform: scale(1); opacity: 1; }
+    50% { transform: scale(1.3); opacity: 0.7; }
+  }
+
+  /* Tip */
+  .tip {
+    font-size: 0.78rem;
+    color: var(--muted);
+    text-align: center;
+    font-weight: 300;
+    line-height: 1.5;
+    padding: 0 8px;
+  }
+
+  .hidden { display: none !important; }
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="header">
+    <h1>Baby<em>foon</em></h1>
+    <p>Twee telefoons, één verbinding</p>
+  </div>
+
+  <!-- Mode keuze -->
+  <div class="mode-card" id="setupSection">
+    <div class="mode-label">Ik ben de...</div>
+    <div class="mode-buttons">
+      <button class="mode-btn active" id="btnBaby" onclick="selectMode('baby')">
+        <span class="icon">🍼</span>
+        <span class="label">Baby-kant</span>
+        <span class="sublabel">Microfoon aan</span>
+      </button>
+      <button class="mode-btn" id="btnParent" onclick="selectMode('parent')">
+        <span class="icon">👂</span>
+        <span class="label">Ouder-kant</span>
+        <span class="sublabel">Luisteren</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Code invoer -->
+  <div class="code-card" id="codeSection">
+    <div class="code-row">
+      <div class="code-input-wrap">
+        <label for="codeInput">Verbindingscode</label>
+        <input type="text" id="codeInput" class="code-input" maxlength="6" placeholder="bijv. BABY01" />
+      </div>
+      <button class="gen-btn" onclick="generateCode()">Genereer</button>
+    </div>
+    <p style="margin-top:10px; font-size:0.75rem; color:var(--muted); font-weight:300;">
+      Gebruik dezelfde code op beide telefoons.
+    </p>
+  </div>
+
+  <!-- Start knop -->
+  <button class="action-btn" id="startBtn" onclick="start()">Verbinding maken</button>
+
+  <!-- Status -->
+  <div class="status-card" id="statusCard">
+    <div class="status-icon" id="statusIcon">📡</div>
+    <div class="status-title" id="statusTitle">Verbinding opzetten...</div>
+    <div class="status-sub" id="statusSub">Wacht op de andere telefoon</div>
+    <div class="visualizer" id="visualizer">
+      <div class="bar" id="b1"></div>
+      <div class="bar" id="b2"></div>
+      <div class="bar" id="b3"></div>
+      <div class="bar" id="b4"></div>
+      <div class="bar" id="b5"></div>
+      <div class="bar" id="b6"></div>
+      <div class="bar" id="b7"></div>
+      <div class="bar" id="b8"></div>
+      <div class="bar" id="b9"></div>
+    </div>
+    <div class="steps" id="steps">
+      <div class="step"><div class="step-dot" id="dot1"></div><span id="step1txt">Microfoon toegang aanvragen...</span></div>
+      <div class="step"><div class="step-dot" id="dot2"></div><span id="step2txt">Signaal opzetten (ICE)</span></div>
+      <div class="step"><div class="step-dot" id="dot3"></div><span id="step3txt">Wachten op andere telefoon</span></div>
+    </div>
+  </div>
+
+  <!-- Stop knop -->
+  <button class="action-btn danger hidden" id="stopBtn" onclick="stop()">Verbinding verbreken</button>
+
+  <p class="tip" id="tipText">
+    Open deze pagina op beide telefoons en gebruik dezelfde code.
+  </p>
+</div>
+
+<script>
+// ── Service Worker registratie ───────────────────────────────────
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('service-worker.js').catch(() => {});
+}
+
+// ── Wake Lock (scherm aan houden) ────────────────────────────────
+let wakeLock = null;
+async function requestWakeLock() {
+  if ('wakeLock' in navigator) {
+    try {
+      wakeLock = await navigator.wakeLock.request('screen');
+    } catch(e) {}
+  }
+}
+document.addEventListener('visibilitychange', async () => {
+  if (wakeLock !== null && document.visibilityState === 'visible') {
+    await requestWakeLock();
+  }
+});
+
+// ── WebRTC Babyfoon ──────────────────────────────────────────────
+// Gebruikt een gratis publieke signaling server (PeerJS) voor de
+// initiële handshake; daarna is audio peer-to-peer.
+
+const PEERJS_CDN = 'https://cdnjs.cloudflare.com/ajax/libs/peerjs/1.5.4/peerjs.min.js';
+
+let mode = 'baby';
+let peer = null;
+let conn = null;
+let mediaCall = null;
+let localStream = null;
+let audioCtx = null;
+let analyser = null;
+let animFrame = null;
+
+// Load PeerJS dynamically
+function loadPeerJS() {
+  return new Promise((res, rej) => {
+    if (window.Peer) return res();
+    const s = document.createElement('script');
+    s.src = PEERJS_CDN;
+    s.onload = res;
+    s.onerror = () => rej(new Error('Kon PeerJS niet laden. Controleer je internetverbinding.'));
+    document.head.appendChild(s);
+  });
+}
+
+function selectMode(m) {
+  mode = m;
+  document.getElementById('btnBaby').classList.toggle('active', m === 'baby');
+  document.getElementById('btnParent').classList.toggle('active', m === 'parent');
+
+  const codeEl = document.getElementById('codeInput');
+  if (m === 'baby') {
+    document.getElementById('tipText').textContent = 'Zet deze telefoon bij de baby. De andere telefoon kiest "Ouder-kant" met dezelfde code.';
+    codeEl.placeholder = 'bijv. BABY01';
+  } else {
+    document.getElementById('tipText').textContent = 'Voer dezelfde code in als op de baby-kant en druk op verbinden.';
+    codeEl.placeholder = 'Code van baby-kant';
+  }
+}
+
+function generateCode() {
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  let code = '';
+  for (let i = 0; i < 6; i++) code += chars[Math.floor(Math.random() * chars.length)];
+  document.getElementById('codeInput').value = code;
+}
+
+function setStep(n, state) {
+  const dot = document.getElementById('dot' + n);
+  dot.className = 'step-dot ' + state;
+}
+
+function setStatus(icon, title, sub) {
+  document.getElementById('statusIcon').textContent = icon;
+  document.getElementById('statusTitle').textContent = title;
+  document.getElementById('statusSub').textContent = sub;
+}
+
+async function start() {
+  const rawCode = document.getElementById('codeInput').value.trim().toUpperCase();
+  if (!rawCode || rawCode.length < 4) {
+    alert('Voer een code in van minimaal 4 tekens.');
+    return;
+  }
+
+  // Show status
+  document.getElementById('setupSection').classList.add('hidden');
+  document.getElementById('codeSection').classList.add('hidden');
+  document.getElementById('startBtn').classList.add('hidden');
+  document.getElementById('tipText').classList.add('hidden');
+  document.getElementById('statusCard').classList.add('visible');
+
+  setStep(1, 'active'); setStep(2, ''); setStep(3, '');
+
+  try {
+    await loadPeerJS();
+  } catch(e) {
+    setStatus('❌', 'Fout', e.message);
+    return;
+  }
+
+  // PeerJS IDs: prefix to avoid collisions
+  const babyId  = 'babyfoon-baby-'  + rawCode;
+  const parentId = 'babyfoon-parent-' + rawCode;
+
+  const myId = mode === 'baby' ? babyId : parentId;
+  const otherId = mode === 'baby' ? parentId : babyId;
+
+  peer = new Peer(myId, { debug: 0 });
+
+  peer.on('error', (err) => {
+    if (err.type === 'unavailable-id') {
+      setStatus('⚠️', 'Code al in gebruik', 'Kies een andere code of wacht even.');
+    } else {
+      setStatus('❌', 'Verbindingsfout', err.message || err.type);
+    }
+    showReset();
+  });
+
+  if (mode === 'baby') {
+    // Baby: get mic, wait for parent to call
+    peer.on('open', async () => {
+      setStatus('🎤', 'Microfoon starten...', 'Sta toegang toe in je browser');
+      try {
+        localStream = await navigator.mediaDevices.getUserMedia({
+          audio: { echoCancellation: true, noiseSuppression: true },
+          video: false
+        });
+        setStep(1, 'done'); setStep(2, 'active');
+        setStatus('📡', 'Wachten op ouder-kant...', 'Open de app op de andere telefoon');
+      } catch(e) {
+        setStatus('❌', 'Microfoon geweigerd', 'Sta microfoon-toegang toe in je browserinstellingen.');
+        showReset(); return;
+      }
+
+      peer.on('call', (call) => {
+        mediaCall = call;
+        call.answer(localStream);
+        setStep(2, 'done'); setStep(3, 'active');
+        setStatus('✅', 'Verbonden!', 'Babyfoon is actief');
+        requestWakeLock();
+        startVisualizer(localStream);
+        call.on('close', () => { setStatus('📴', 'Verbinding verbroken', ''); showReset(); });
+        call.on('error', (e) => { setStatus('❌', 'Fout', e.message); showReset(); });
+        setStep(3, 'done');
+        document.getElementById('stopBtn').classList.remove('hidden');
+      });
+    });
+
+  } else {
+    // Parent: call baby once peer is ready
+    peer.on('open', async () => {
+      setStep(1, 'done'); setStep(2, 'active');
+      setStatus('📡', 'Verbinden met baby-kant...', 'Zorg dat de baby-kant ook open staat');
+
+      // We need a dummy stream to initiate call (some browsers require it)
+      let dummyStream;
+      try {
+        // Try silent stream via AudioContext
+        const ctx = new AudioContext();
+        const dest = ctx.createMediaStreamDestination();
+        dummyStream = dest.stream;
+      } catch(e) {
+        dummyStream = null;
+      }
+
+      const call = dummyStream
+        ? peer.call(otherId, dummyStream)
+        : (() => { setStatus('❌', 'Niet ondersteund', 'Probeer een andere browser (Chrome werkt het best).'); showReset(); return null; })();
+
+      if (!call) return;
+      mediaCall = call;
+
+      call.on('stream', (remoteStream) => {
+        setStep(2, 'done'); setStep(3, 'done');
+        setStatus('✅', 'Verbonden!', 'Je hoort de baby nu live');
+        requestWakeLock();
+        playStream(remoteStream);
+        startVisualizer(remoteStream);
+        document.getElementById('stopBtn').classList.remove('hidden');
+      });
+
+      call.on('error', (e) => {
+        setStatus('❌', 'Verbindingsfout', e.message || 'Controleer of de baby-kant ook open staat.');
+        showReset();
+      });
+
+      // Timeout if no answer
+      setTimeout(() => {
+        if (!document.getElementById('stopBtn').classList.contains('hidden')) return;
+        if (call.open === false) {
+          setStatus('⏱️', 'Geen reactie', 'Zorg dat de baby-kant open staat met dezelfde code.');
+          showReset();
+        }
+      }, 25000);
+    });
+  }
+}
+
+function playStream(stream) {
+  const audio = new Audio();
+  audio.srcObject = stream;
+  audio.autoplay = true;
+  audio.volume = 1;
+  document.body.appendChild(audio);
+}
+
+function startVisualizer(stream) {
+  document.getElementById('visualizer').classList.add('visible');
+  audioCtx = new AudioContext();
+  const source = audioCtx.createMediaStreamSource(stream);
+  analyser = audioCtx.createAnalyser();
+  analyser.fftSize = 64;
+  source.connect(analyser);
+  const bars = [1,2,3,4,5,6,7,8,9].map(i => document.getElementById('b'+i));
+  const data = new Uint8Array(analyser.frequencyBinCount);
+  function draw() {
+    analyser.getByteFrequencyData(data);
+    bars.forEach((bar, i) => {
+      const val = data[i * 2] || 0;
+      const h = 4 + (val / 255) * 40;
+      bar.style.height = h + 'px';
+      bar.style.opacity = 0.4 + (val / 255) * 0.6;
+    });
+    animFrame = requestAnimationFrame(draw);
+  }
+  draw();
+}
+
+function stop() {
+  if (animFrame) cancelAnimationFrame(animFrame);
+  if (audioCtx) { audioCtx.close(); audioCtx = null; }
+  if (mediaCall) { mediaCall.close(); mediaCall = null; }
+  if (localStream) { localStream.getTracks().forEach(t => t.stop()); localStream = null; }
+  if (peer) { peer.destroy(); peer = null; }
+  document.querySelectorAll('audio').forEach(a => a.remove());
+  showReset();
+  setStatus('👋', 'Verbinding verbroken', 'Druk op vernieuwen om opnieuw te starten.');
+}
+
+function showReset() {
+  document.getElementById('stopBtn').classList.add('hidden');
+  setTimeout(() => {
+    // Show a reload hint
+    const btn = document.getElementById('startBtn');
+    btn.textContent = '↺ Opnieuw starten';
+    btn.classList.remove('hidden');
+    btn.onclick = () => location.reload();
+    document.getElementById('tipText').classList.remove('hidden');
+  }, 500);
+}
+
+// Init
+generateCode();
+selectMode('baby');
+</script>
+</body>
+</html>
